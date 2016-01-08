@@ -8,6 +8,7 @@ import source from 'vinyl-source-stream';
 import buffer from 'vinyl-buffer';
 import watchify from 'watchify';
 import babelify from 'babelify';
+import shim from 'browserify-shim';
 import through from 'through';
 import eslint from 'gulp-eslint';
 import conf from './conf';
@@ -19,35 +20,25 @@ gulp.task('clean', () =>
     del(path.join(conf.DIST_PATH, '**/*'))
 );
 
-gulp.task('compile', ['compile:base', 'compile:angular', 'compile:no_lodash'], () => {
+gulp.task('compile', ['compile:base', 'compile:angular', 'compile:no_lodash', 'compile:tests'], () => {
     console.log('-> build watchers started');
 });
 
-gulp.task('compile:base', () => {
-    return compile(conf.BASE_ENTRY, conf.BASE_DIST_FILE, (b) => {
-        b.on('bundle', lint);
-    });
-});
+gulp.task('compile:tests', () => compile(conf.TEST_ENTRY, conf.COMPILED_TEST_FILE));
 
-gulp.task('compile:angular', () => {
-    return compile(conf.ANGULAR_ENTRY, conf.ANGULAR_DIST_FILE);
-});
+gulp.task('compile:base', () =>
+    compile(conf.BASE_ENTRY, conf.BASE_DIST_FILE, (b) => b.on('bundle', lint))
+);
 
-gulp.task('compile:no_lodash', () => {
-    return compile(conf.NO_LODASH_ENTRY, conf.NO_LODASH_DIST_FILE, (b) => {
-        // Transform lodash requires into _.lodash calls.
-        b.transform(() => {
-            let data = '';
-            return through((b) => { data += b; }, function () {
-                this.queue(data.replace(new RegExp(/require\(\'lodash(.*?)\'\)/, 'g'), (m, n) => {
-                    let parts  = n.split('/');
-                    return parts.length ? '_.' + parts.pop() : '_';
-                }));
-                this.queue(null);
-            });
-        });
-    });
-});
+gulp.task('compile:angular', () => compile(conf.ANGULAR_ENTRY, conf.ANGULAR_DIST_FILE));
+
+gulp.task('compile:no_lodash', () =>
+    compile(conf.NO_LODASH_ENTRY, conf.NO_LODASH_DIST_FILE, (b) =>
+        b.transform(shim, {
+            global: true
+        })
+    )
+);
 
 function lint() {
     return gulp.src(path.join(conf.SRC_PATH, '**/*.js'))
@@ -63,7 +54,7 @@ function compile(entry, exit, cb) {
         plugin: [watchify]
     });
 
-    b.transform(babelify, {presets: ['es2015']});
+    b.transform(babelify);
 
     function build() {
         return b.bundle()
@@ -87,5 +78,5 @@ function compile(entry, exit, cb) {
         cb(b);
     }
 
-    build();
+    return build();
 }

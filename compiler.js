@@ -1,5 +1,5 @@
 import gulp from 'gulp';
-import {argv} from 'process';
+import {argv, default as process} from 'process';
 import {enableWatch, enableTests} from './build/conf';
 
 import './build/build';
@@ -12,5 +12,7 @@ if (argv.includes('--dev')) {
 } else if(argv.includes('--test')) {
     enableTests();
 }
+
+process.on('SIGINT', process.exit);
 
 gulp.start('build');

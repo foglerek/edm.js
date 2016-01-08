@@ -1,8 +1,8 @@
 function EDMException(e) {
     let args = Array.from(arguments).slice(1);
-    this.message = e.replace(/{(\d+)}/g, (match, number) => {
+    this.message = e ? e.replace(/{(\d+)}/g, (match, number) => {
         return args[number];
-    });
+    }) : 'Unknown error';
     this.stack = (new Error(this.message)).stack;
     this.toString = () => `${this.name}: ${this.message}`;
 }

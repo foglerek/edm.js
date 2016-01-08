@@ -13,7 +13,7 @@ gulp.task('test', (done) => {
         files: [
           'node_modules/lodash/index.js',
           'dist/**/*.js',
-          'test/**/*.js'
+          'compiled/**/*.js'
         ],
         reporters: ['progress', 'coverage'],
         port: 9999,

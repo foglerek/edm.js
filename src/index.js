@@ -1,8 +1,10 @@
 import Error from './error';
-import Config from './config';
+import Store from './store';
 
 function EDM() {
-    Config.setBasePath('asb');
+    this.createStore = function(config) {
+        return new Store(config);
+    }
 }
 
 // Make constructor available to user if needed.
